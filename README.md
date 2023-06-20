@@ -34,7 +34,7 @@ weaver
   - [x] Create `mods/` directory
   - [ ] Clear mods directory
 - [ ] Command-line interface: `cmd/weaver`
-  - [ ] `install`
+  - [x] `install`
   - [ ] `add`
   - [ ] `update`
 

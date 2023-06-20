@@ -65,20 +65,20 @@ func fileExists(path string) error {
 	return isDirErr
 }
 
-func ShouldDownload(path string, hash string) (bool, bool, error) {
+func ShouldDownload(path string, hash string) (bool, error) {
 	fileExistsErr := fileExists(path)
 
 	if fileExistsErr != nil {
-		return true, false, nil
+		return true, nil
 	}
 
 	fileHash, getFileHashError := getFileHash(path)
 
 	if getFileHashError != nil {
-		return false, false, getFileHashError
+		return false, getFileHashError
 	}
 
-	return hash != fileHash, true, nil
+	return hash != fileHash, nil
 }
 
 func DeleteFile(path string) error {

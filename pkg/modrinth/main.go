@@ -127,20 +127,12 @@ func (v Version) GetPrimaryFile() *File {
 	return &v.Files[primaryIndex]
 }
 
-func DownloadLatestVersion(projectId string, loader string, gameVersion string) (io.ReadCloser, string, error) {
-	latestVersion, latestVersionError := GetLatestVersion(projectId, loader, gameVersion)
-
-	if latestVersionError != nil {
-		return nil, "", latestVersionError
-	}
-
-	file := latestVersion.GetPrimaryFile()
-
-	resp, getErr := http.Get(file.Url)
+func (f File) Download() (io.ReadCloser, error) {
+	resp, getErr := http.Get(f.Url)
 
 	if getErr != nil {
-		return nil, "", getErr
+		return nil, getErr
 	}
 
-	return resp.Body, file.Filename, nil
+	return resp.Body, nil
 }
