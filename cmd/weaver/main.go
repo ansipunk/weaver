@@ -10,14 +10,14 @@ const modDirectory = "mods/"
 
 func main() {
 	app := &cli.App{
-		Name: "weaver",
+		Name:  "weaver",
 		Usage: "Minecraft server manager",
 		Commands: []*cli.Command{
 			{
-				Name: "install",
+				Name:    "install",
 				Aliases: []string{"i"},
-				Usage: "install all mods from the toml file",
-				Action: Install,
+				Usage:   "install all mods from the toml file",
+				Action:  Install,
 			},
 		},
 	}

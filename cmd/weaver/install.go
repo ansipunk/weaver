@@ -32,7 +32,7 @@ func Install(cCtx *cli.Context) error {
 		primaryFile := version.GetPrimaryFile()
 
 		shouldDownload, shouldErr := fs.ShouldDownload(
-			modDirectory + modName + ".jar", primaryFile.Hashes.Sha1)
+			modDirectory+modName+".jar", primaryFile.Hashes.Sha1)
 
 		if shouldErr != nil {
 			return shouldErr
@@ -51,7 +51,7 @@ func Install(cCtx *cli.Context) error {
 				return deleteErr
 			}
 
-			if saveErr := fs.SaveFile(reader, modDirectory + modName + ".jar"); saveErr != nil {
+			if saveErr := fs.SaveFile(reader, modDirectory+modName+".jar"); saveErr != nil {
 				return saveErr
 			}
 		}
