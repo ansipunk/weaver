@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"git.sr.ht/~ansipunk/weaver/pkg/cfg"
 	"git.sr.ht/~ansipunk/weaver/pkg/fs"
 	"git.sr.ht/~ansipunk/weaver/pkg/modrinth"
@@ -18,9 +17,6 @@ func Install(cCtx *cli.Context) error {
 	if ensureDirErr := fs.EnsureDir(modDirectory); ensureDirErr != nil {
 		return ensureDirErr
 	}
-
-	fmt.Println(config.Loader)
-	fmt.Println(config.GameVersion)
 
 	for _, modName := range config.Mods {
 		version, versionErr := modrinth.GetLatestVersion(modName, config.Loader, config.GameVersion)

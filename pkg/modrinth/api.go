@@ -3,28 +3,8 @@ package modrinth
 import (
 	"encoding/json"
 	"errors"
-	"io"
-	"net/http"
 	"net/url"
 )
-
-const baseUrl string = "https://api.modrinth.com/v2"
-
-func makeRequest(url string) ([]byte, error) {
-	resp, getErr := http.Get(url)
-
-	if getErr != nil {
-		return []byte{}, getErr
-	}
-
-	body, readErr := io.ReadAll(resp.Body)
-
-	if readErr != nil {
-		return []byte{}, readErr
-	}
-
-	return body, nil
-}
 
 func GetLatestVersion(projectId string, loader string, gameVersion string) (Version, error) {
 	loaders := "[\"" + loader + "\"]"
