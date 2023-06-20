@@ -1,4 +1,4 @@
 # For manual testing purposes
 /weaver
 /weaver.toml
-*.jar
+/mods/
