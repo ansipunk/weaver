@@ -13,15 +13,14 @@ weaver
 
 - [ ] Server configuration: `pkg/cfg`
   - [x] Loader
-  - [ ] Version constraints
   - [x] Game version
   - [ ] Mods
     - [x] Basic list
     - [ ] Version constraints
     - [ ] Dependencies
-- [ ] Modrinth API: `pkg/modrinth`
+- [x] Modrinth API: `pkg/modrinth`
   - [x] Get latest version
-  - [ ] Get specific version
+  - [x] Get specific version
 - [ ] Fabric API: `pkg/fabric`
   - [ ] Get latest core
   - [ ] Get specific core
@@ -34,6 +33,7 @@ weaver
   - [x] Create `mods/` directory
   - [x] Clear mods directory
 - [ ] Command-line interface: `cmd/weaver`
+  - [ ] Threading
   - [x] `install`
   - [ ] `add`
   - [ ] `update`

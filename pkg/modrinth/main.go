@@ -68,3 +68,21 @@ func GetLatestVersion(projectId string, loader string, gameVersion string) (Vers
 
 	return versions[0], nil
 }
+
+func GetSpecificVersion(versionId string) (Version, error) {
+	var version Version
+	url := baseUrl + "/version/" + url.QueryEscape(versionId)
+	body, getErr := makeRequest(url)
+
+	if getErr != nil {
+		return Version{}, getErr
+	}
+
+	jsonErr := json.Unmarshal(body, &version)
+
+	if jsonErr != nil {
+		return Version{}, jsonErr
+	}
+
+	return version, nil
+}

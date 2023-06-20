@@ -46,7 +46,26 @@ type Version struct {
 	Files           []File       `json:"files,omitempty"`
 }
 
-func (v Version) GetPrimaryFile() *File {
+func (v *Version) GetDependencies() ([]Version, error) {
+	dependencyVersions := []Version{}
+
+	for _, dependency := range v.Dependencies {
+		if dependency.VersionId != "" {
+			specificVersion, specificVersionErr := GetSpecificVersion(dependency.VersionId)
+
+			if specificVersionErr != nil {
+				return dependencyVersions, specificVersionErr
+			}
+
+			dependencyVersions = append(dependencyVersions, specificVersion)
+		}
+	}
+
+	v.Dependencies = nil
+	return dependencyVersions, nil
+}
+
+func (v *Version) GetPrimaryFile() *File {
 	if len(v.Files) == 1 {
 		return &v.Files[0]
 	}
@@ -63,7 +82,7 @@ func (v Version) GetPrimaryFile() *File {
 	return &v.Files[primaryIndex]
 }
 
-func (f File) Download() (io.ReadCloser, error) {
+func (f *File) Download() (io.ReadCloser, error) {
 	resp, getErr := http.Get(f.Url)
 
 	if getErr != nil {
