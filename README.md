@@ -29,10 +29,10 @@ weaver
   - [ ] Installed packages
   - [ ] Package hashes
   - [ ] `weaver.toml` hash
-- [ ] FS: `pkg/fs`
+- [x] FS: `pkg/fs`
   - [x] Compare file hashes
   - [x] Create `mods/` directory
-  - [ ] Clear mods directory
+  - [x] Clear mods directory
 - [ ] Command-line interface: `cmd/weaver`
   - [x] `install`
   - [ ] `add`

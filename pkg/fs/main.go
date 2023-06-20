@@ -6,6 +6,7 @@ import (
 	"errors"
 	"io"
 	"os"
+	"strings"
 )
 
 func isDir(path string) (bool, error) {
@@ -82,7 +83,13 @@ func ShouldDownload(path string, hash string) (bool, error) {
 }
 
 func DeleteFile(path string) error {
-	return os.Remove(path)
+	err := os.Remove(path)
+
+	if strings.Contains(err.Error(), "no such file or directory") {
+		return nil
+	}
+
+	return err
 }
 
 func SaveFile(contents io.ReadCloser, path string) error {
