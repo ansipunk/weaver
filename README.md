@@ -17,7 +17,7 @@ weaver
   - [ ] Mods
     - [x] Basic list
     - [ ] Version constraints
-    - [ ] Dependencies
+    - [x] Dependencies
 - [x] Modrinth API: `pkg/modrinth`
   - [x] Get latest version
   - [x] Get specific version
@@ -34,6 +34,7 @@ weaver
   - [x] Clear mods directory
 - [ ] Command-line interface: `cmd/weaver`
   - [ ] Threading
+  - [ ] Logging
   - [x] `install`
   - [ ] `add`
   - [ ] `update`

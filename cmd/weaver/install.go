@@ -18,17 +18,19 @@ func Install(cCtx *cli.Context) error {
 		return ensureDirErr
 	}
 
-	for _, modName := range config.Mods {
-		version, versionErr := modrinth.GetLatestVersion(modName, config.Loader, config.GameVersion)
+	versionsToDownload, verErr := modrinth.GetAllVersionsToDownload(&config.Mods, &config.Loader, &config.GameVersion)
+	filenames := []string{}
 
-		if versionErr != nil {
-			return versionErr
-		}
+	if verErr != nil {
+		return verErr
+	}
 
+	for _, version := range versionsToDownload {
 		primaryFile := version.GetPrimaryFile()
+		filename := version.Name + ".jar"
 
 		shouldDownload, shouldErr := fs.ShouldDownload(
-			modDirectory+modName+".jar", primaryFile.Hashes.Sha1)
+			modDirectory+version.Name+".jar", primaryFile.Hashes.Sha1)
 
 		if shouldErr != nil {
 			return shouldErr
@@ -43,15 +45,17 @@ func Install(cCtx *cli.Context) error {
 
 			defer reader.Close()
 
-			if deleteErr := fs.DeleteFile(modDirectory + modName + ".jar"); deleteErr != nil {
+			if deleteErr := fs.DeleteFile(modDirectory + filename); deleteErr != nil {
 				return deleteErr
 			}
 
-			if saveErr := fs.SaveFile(reader, modDirectory+modName+".jar"); saveErr != nil {
+			if saveErr := fs.SaveFile(reader, modDirectory+filename); saveErr != nil {
 				return saveErr
 			}
 		}
+
+		filenames = append(filenames, filename)
 	}
 
-	return nil
+	return fs.RemoveOldFiles(filenames, modDirectory)
 }

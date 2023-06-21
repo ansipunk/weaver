@@ -66,3 +66,29 @@ func GetSpecificVersion(versionId string) (Version, error) {
 
 	return version, nil
 }
+
+func GetAllVersionsToDownload(modNames *[]string, loader, gameVersion *string) ([]Version, error) {
+	versionsToDownload := []Version{}
+
+	for _, modName := range *modNames {
+		version, versionErr := GetLatestVersion(modName, *loader, *gameVersion)
+
+		if versionErr != nil {
+			return versionsToDownload, versionErr
+		}
+
+		versionsToDownload = append(versionsToDownload, version)
+	}
+
+	for _, version := range versionsToDownload {
+		dependencies, depErr := version.GetDependencies()
+
+		if depErr != nil {
+			return versionsToDownload, depErr
+		}
+
+		versionsToDownload = append(versionsToDownload, dependencies...)
+	}
+
+	return deduplicateVersions(&versionsToDownload), nil
+}

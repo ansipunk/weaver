@@ -1,6 +1,7 @@
 package modrinth
 
 import (
+	"git.sr.ht/~ansipunk/weaver/pkg/utils"
 	"io"
 	"net/http"
 )
@@ -21,4 +22,18 @@ func makeRequest(url string) ([]byte, error) {
 	}
 
 	return body, nil
+}
+
+func deduplicateVersions(versions *[]Version) []Version {
+	deduplicated := []Version{}
+	modNames := []string{}
+
+	for _, version := range *versions {
+		if !utils.Contains(&modNames, version.ProjectId) {
+			modNames = append(modNames, version.ProjectId)
+			deduplicated = append(deduplicated, version)
+		}
+	}
+
+	return deduplicated
 }

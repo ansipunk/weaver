@@ -4,6 +4,7 @@ import (
 	"crypto/sha1"
 	"encoding/hex"
 	"errors"
+	"git.sr.ht/~ansipunk/weaver/pkg/utils"
 	"io"
 	"os"
 	"strings"
@@ -85,7 +86,7 @@ func ShouldDownload(path string, hash string) (bool, error) {
 func DeleteFile(path string) error {
 	err := os.Remove(path)
 
-	if strings.Contains(err.Error(), "no such file or directory") {
+	if err != nil && strings.Contains(err.Error(), "no such file or directory") {
 		return nil
 	}
 
@@ -105,4 +106,26 @@ func SaveFile(contents io.ReadCloser, path string) error {
 
 	_, err := io.Copy(file, contents)
 	return err
+}
+
+func RemoveOldFiles(requiredFiles []string, directory string) error {
+	dirEntries, readDirErr := os.ReadDir(directory)
+
+	if readDirErr != nil {
+		return readDirErr
+	}
+
+	for _, dirEntry := range dirEntries {
+		if dirEntry.IsDir() ||
+			utils.Contains(&requiredFiles, dirEntry.Name()) ||
+			!strings.HasSuffix(dirEntry.Name(), ".jar") {
+			continue
+		}
+
+		if deleteErr := DeleteFile(directory + dirEntry.Name()); deleteErr != nil {
+			return deleteErr
+		}
+	}
+
+	return nil
 }
