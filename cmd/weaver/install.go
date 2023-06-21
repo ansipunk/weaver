@@ -30,7 +30,7 @@ func Install(cCtx *cli.Context) error {
 		filename := version.Slug + ".jar"
 
 		shouldDownload, shouldErr := fs.ShouldDownload(
-			modDirectory+version.Name+".jar", primaryFile.Hashes.Sha1)
+			modDirectory+version.Slug+".jar", primaryFile.Hashes.Sha1)
 
 		if shouldErr != nil {
 			return shouldErr
