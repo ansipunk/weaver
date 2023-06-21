@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"git.sr.ht/~ansipunk/weaver/pkg/utils"
+	"github.com/schollz/progressbar/v3"
 	"io"
 	"os"
 	"strings"
@@ -93,7 +94,7 @@ func DeleteFile(path string) error {
 	return err
 }
 
-func SaveFile(contents io.ReadCloser, path string) error {
+func SaveFile(contents io.ReadCloser, path string, progressBar *progressbar.ProgressBar) error {
 	defer contents.Close()
 
 	file, createErr := os.Create(path)
@@ -104,8 +105,13 @@ func SaveFile(contents io.ReadCloser, path string) error {
 
 	defer file.Close()
 
-	_, err := io.Copy(file, contents)
-	return err
+	if progressBar == nil {
+		_, err := io.Copy(file, contents)
+		return err
+	} else {
+		_, err := io.Copy(io.MultiWriter(file, progressBar), contents)
+		return err
+	}
 }
 
 func RemoveOldFiles(requiredFiles []string, directory string) error {

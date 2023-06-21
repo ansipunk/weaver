@@ -35,9 +35,7 @@ weaver
 - [ ] Command-line interface: `cmd/weaver`
   - [ ] Threading
   - [ ] Logging
-  - [x] `install`
-  - [ ] `add`
-  - [ ] `update`
+  - [x] Installation
 
 ## File example
 

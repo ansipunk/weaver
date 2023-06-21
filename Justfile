@@ -8,3 +8,6 @@ format:
 
 build:
   go build 'git.sr.ht/~ansipunk/weaver/cmd/weaver'
+
+tidy:
+  go mod tidy

@@ -23,7 +23,7 @@ type File struct {
 	Url      string `json:"url,omitempty"`
 	Filename string `json:"filename,omitempty"`
 	Primary  bool   `json:"primary,omitempty"`
-	Size     uint   `json:"size,omitempty"`
+	Size     int64  `json:"size,omitempty"`
 	FileType string `json:"file_type,omitempty"`
 }
 

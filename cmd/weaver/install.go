@@ -1,9 +1,11 @@
 package main
 
 import (
+	"fmt"
 	"git.sr.ht/~ansipunk/weaver/pkg/cfg"
 	"git.sr.ht/~ansipunk/weaver/pkg/fs"
 	"git.sr.ht/~ansipunk/weaver/pkg/modrinth"
+	"github.com/schollz/progressbar/v3"
 	"github.com/urfave/cli/v2"
 )
 
@@ -19,18 +21,30 @@ func Install(cCtx *cli.Context) error {
 	}
 
 	versionsToDownload, verErr := modrinth.GetAllVersionsToDownload(&config.Mods, &config.Loader, &config.GameVersion)
+	versionSlugs := []string{}
+
+	for _, version := range versionsToDownload {
+		versionSlugs = append(versionSlugs, version.Slug)
+	}
+
 	filenames := []string{}
 
 	if verErr != nil {
 		return verErr
 	}
 
+	var downloaded uint16
+	var skipped uint16
+
+	fmt.Println("Mods to install:", versionSlugs)
+	fmt.Println("================")
+
 	for _, version := range versionsToDownload {
 		primaryFile := version.GetPrimaryFile()
 		filename := version.Slug + ".jar"
 
 		shouldDownload, shouldErr := fs.ShouldDownload(
-			modDirectory+version.Slug+".jar", primaryFile.Hashes.Sha1)
+			modDirectory+filename, primaryFile.Hashes.Sha1)
 
 		if shouldErr != nil {
 			return shouldErr
@@ -49,13 +63,24 @@ func Install(cCtx *cli.Context) error {
 				return deleteErr
 			}
 
-			if saveErr := fs.SaveFile(reader, modDirectory+filename); saveErr != nil {
+			pb := progressbar.DefaultBytes(primaryFile.Size, version.Slug)
+
+			if saveErr := fs.SaveFile(reader, modDirectory+filename, pb); saveErr != nil {
 				return saveErr
 			}
+
+			downloaded++
+		} else {
+			fmt.Println(version.Slug, "is already up to date")
+			skipped++
 		}
 
 		filenames = append(filenames, filename)
 	}
+
+	fmt.Println("================")
+	fmt.Println("Downloaded:", downloaded)
+	fmt.Println("Skipped:", skipped)
 
 	return fs.RemoveOldFiles(filenames, modDirectory)
 }

@@ -10,16 +10,9 @@ const modDirectory = "mods/"
 
 func main() {
 	app := &cli.App{
-		Name:  "weaver",
-		Usage: "Minecraft server manager",
-		Commands: []*cli.Command{
-			{
-				Name:    "install",
-				Aliases: []string{"i"},
-				Usage:   "install all mods from the toml file",
-				Action:  Install,
-			},
-		},
+		Name:   "weaver",
+		Usage:  "Install all mods from the `weaver.toml` file.",
+		Action: Install,
 	}
 
 	if err := app.Run(os.Args); err != nil {
