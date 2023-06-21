@@ -27,7 +27,7 @@ func Install(cCtx *cli.Context) error {
 
 	for _, version := range versionsToDownload {
 		primaryFile := version.GetPrimaryFile()
-		filename := version.Name + ".jar"
+		filename := version.Slug + ".jar"
 
 		shouldDownload, shouldErr := fs.ShouldDownload(
 			modDirectory+version.Name+".jar", primaryFile.Hashes.Sha1)

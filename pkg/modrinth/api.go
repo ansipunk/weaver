@@ -6,10 +6,10 @@ import (
 	"net/url"
 )
 
-func GetLatestVersion(projectId string, loader string, gameVersion string) (Version, error) {
+func GetLatestVersion(projectSlug string, loader string, gameVersion string) (Version, error) {
 	loaders := "[\"" + loader + "\"]"
 	gameVersions := "[\"" + gameVersion + "\"]"
-	url := baseUrl + "/project/" + url.QueryEscape(projectId) + "/version" +
+	url := baseUrl + "/project/" + url.QueryEscape(projectSlug) + "/version" +
 		"?loaders=" + url.QueryEscape(loaders) +
 		"&game_versions=" + url.QueryEscape(gameVersions) +
 		"&featured="
@@ -46,6 +46,7 @@ func GetLatestVersion(projectId string, loader string, gameVersion string) (Vers
 		}
 	}
 
+	versions[0].Slug = projectSlug
 	return versions[0], nil
 }
 
@@ -64,7 +65,8 @@ func GetSpecificVersion(versionId string) (Version, error) {
 		return Version{}, jsonErr
 	}
 
-	return version, nil
+	slugErr := version.SetProjectSlug()
+	return version, slugErr
 }
 
 func GetAllVersionsToDownload(modNames *[]string, loader, gameVersion *string) ([]Version, error) {
@@ -91,4 +93,17 @@ func GetAllVersionsToDownload(modNames *[]string, loader, gameVersion *string) (
 	}
 
 	return deduplicateVersions(&versionsToDownload), nil
+}
+
+func GetProject(projectId string) (Project, error) {
+	var project Project
+	url := baseUrl + "/project/" + url.QueryEscape(projectId)
+	body, getErr := makeRequest(url)
+
+	if getErr != nil {
+		return project, getErr
+	}
+
+	jsonErr := json.Unmarshal(body, &project)
+	return project, jsonErr
 }
