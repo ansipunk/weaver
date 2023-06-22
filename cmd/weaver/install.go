@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"sync"
 
 	"github.com/schollz/progressbar/v3"
 	"github.com/urfave/cli/v2"
@@ -32,8 +33,11 @@ func Install(cCtx *cli.Context) error {
 	versionSlugs := make([]string, len(versionsToDownload))
 	filenames := make([]string, len(versionsToDownload))
 
-	var downloaded uint16
-	var skipped uint16
+	var (
+		downloaded uint16
+		skipped    uint16
+		wg         sync.WaitGroup // WaitGroup for synchronization
+	)
 
 	fmt.Println("Mods to install:")
 	fmt.Println("================")
@@ -50,27 +54,38 @@ func Install(cCtx *cli.Context) error {
 		}
 
 		if shouldDownload {
-			reader, err := primaryFile.Download()
-			if err != nil {
-				return fmt.Errorf("failed to download file: %w", err)
-			}
-			defer reader.Close()
+			wg.Add(1) // Increment WaitGroup counter for each goroutine
 
-			if err := fs.DeleteFile(modDirectory + filename); err != nil {
-				return fmt.Errorf("failed to delete existing file: %w", err)
-			}
+			go func(version modrinth.Version) {
+				defer wg.Done() // Signal the WaitGroup that the goroutine is done
 
-			pb := progressbar.DefaultBytes(primaryFile.Size, version.Slug)
-			if err := fs.SaveFile(reader, modDirectory+filename, pb); err != nil {
-				return fmt.Errorf("failed to save file: %w", err)
-			}
+				reader, err := primaryFile.Download()
+				if err != nil {
+					fmt.Printf("failed to download file for version %s: %v\n", version.Slug, err)
+					return
+				}
+				defer reader.Close()
 
-			downloaded++
+				if err := fs.DeleteFile(modDirectory + filename); err != nil {
+					fmt.Printf("failed to delete existing file for version %s: %v\n", version.Slug, err)
+					return
+				}
+
+				pb := progressbar.DefaultBytes(primaryFile.Size, version.Slug)
+				if err := fs.SaveFile(reader, modDirectory+filename, pb); err != nil {
+					fmt.Printf("failed to save file for version %s: %v\n", version.Slug, err)
+					return
+				}
+
+				downloaded++
+			}(version)
 		} else {
-			fmt.Println(version.Slug, "is already up to date")
+			fmt.Printf("Skipped: %s (already up to date)\n", version.Slug)
 			skipped++
 		}
 	}
+
+	wg.Wait() // Wait for all goroutines to finish
 
 	fmt.Println("================")
 	fmt.Println("Downloaded:", downloaded)

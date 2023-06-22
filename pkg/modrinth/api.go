@@ -3,7 +3,9 @@ package modrinth
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/url"
+	"sync"
 )
 
 func GetLatestVersion(projectSlug, loader, gameVersion string) (Version, error) {
@@ -68,24 +70,46 @@ func GetSpecificVersion(versionId string) (Version, error) {
 
 func GetAllVersionsToDownload(modNames *[]string, loader, gameVersion *string) ([]Version, error) {
 	versionsToDownload := []Version{}
+	var wg sync.WaitGroup
+
+	modLock := sync.Mutex{}
+	dependencyLock := sync.Mutex{}
 
 	for _, modName := range *modNames {
-		version, err := GetLatestVersion(modName, *loader, *gameVersion)
-		if err != nil {
-			return nil, err
-		}
+		wg.Add(1)
+		go func(modName string) {
+			defer wg.Done()
+			version, err := GetLatestVersion(modName, *loader, *gameVersion)
+			if err != nil {
+				fmt.Printf("Failed to get latest version for mod '%s': %v\n", modName, err)
+				return
+			}
 
-		versionsToDownload = append(versionsToDownload, version)
+			modLock.Lock()
+			versionsToDownload = append(versionsToDownload, version)
+			modLock.Unlock()
+		}(modName)
 	}
+
+	wg.Wait()
 
 	for _, version := range versionsToDownload {
-		dependencies, err := version.GetDependencies()
-		if err != nil {
-			return nil, err
-		}
+		wg.Add(1)
+		go func(version Version) {
+			defer wg.Done()
+			dependencies, err := version.GetDependencies()
+			if err != nil {
+				fmt.Printf("Failed to get dependencies for version '%s': %v\n", version.Slug, err)
+				return
+			}
 
-		versionsToDownload = append(versionsToDownload, dependencies...)
+			dependencyLock.Lock()
+			versionsToDownload = append(versionsToDownload, dependencies...)
+			dependencyLock.Unlock()
+		}(version)
 	}
+
+	wg.Wait()
 
 	return deduplicateVersions(versionsToDownload), nil
 }
