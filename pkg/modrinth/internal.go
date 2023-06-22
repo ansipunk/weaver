@@ -1,36 +1,34 @@
 package modrinth
 
 import (
-	"git.sr.ht/~ansipunk/weaver/pkg/utils"
 	"io"
 	"net/http"
 )
 
-const baseUrl string = "https://api.modrinth.com/v2"
+const baseURL = "https://api.modrinth.com/v2"
 
 func makeRequest(url string) ([]byte, error) {
-	resp, getErr := http.Get(url)
-
-	if getErr != nil {
-		return []byte{}, getErr
+	resp, err := http.Get(url)
+	if err != nil {
+		return nil, err
 	}
+	defer resp.Body.Close()
 
-	body, readErr := io.ReadAll(resp.Body)
-
-	if readErr != nil {
-		return []byte{}, readErr
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
 	}
 
 	return body, nil
 }
 
-func deduplicateVersions(versions *[]Version) []Version {
+func deduplicateVersions(versions []Version) []Version {
 	deduplicated := []Version{}
-	modNames := []string{}
+	modNames := make(map[string]bool)
 
-	for _, version := range *versions {
-		if !utils.Contains(&modNames, version.ProjectId) {
-			modNames = append(modNames, version.ProjectId)
+	for _, version := range versions {
+		if !modNames[version.ProjectID] {
+			modNames[version.ProjectID] = true
 			deduplicated = append(deduplicated, version)
 		}
 	}
