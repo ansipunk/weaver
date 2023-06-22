@@ -4,11 +4,13 @@ import (
 	"io"
 	"net/http"
 	"time"
+
+	"github.com/pkg/errors"
 )
 
 type Dependency struct {
-	VersionId      string `json:"version_id,omitempty"`
-	ProjectId      string `json:"project_id,omitempty"`
+	VersionID      string `json:"version_id,omitempty"`
+	ProjectID      string `json:"project_id,omitempty"`
 	FileName       string `json:"file_name,omitempty"`
 	DependencyType string `json:"dependency_type,omitempty"`
 }
@@ -20,7 +22,7 @@ type Hashes struct {
 
 type File struct {
 	Hashes   Hashes `json:"hashes,omitempty"`
-	Url      string `json:"url,omitempty"`
+	URL      string `json:"url,omitempty"`
 	Filename string `json:"filename,omitempty"`
 	Primary  bool   `json:"primary,omitempty"`
 	Size     int64  `json:"size,omitempty"`
@@ -38,9 +40,9 @@ type Version struct {
 	Featured        bool         `json:"featured,omitempty"`
 	Status          string       `json:"status,omitempty"`
 	RequestedStatus string       `json:"requested_status,omitempty"`
-	Id              string       `json:"id,omitempty"`
-	ProjectId       string       `json:"project_id,omitempty"`
-	AuthorId        string       `json:"author_id,omitempty"`
+	ID              string       `json:"id,omitempty"`
+	ProjectID       string       `json:"project_id,omitempty"`
+	AuthorID        string       `json:"author_id,omitempty"`
 	DatePublished   time.Time    `json:"date_published,omitempty"`
 	Downloads       uint         `json:"downloads,omitempty"`
 	Files           []File       `json:"files,omitempty"`
@@ -102,59 +104,59 @@ type Project struct {
 	Gallery              []GalleryImage `json:"gallery,omitempty"`
 }
 
-func (v *Version) GetDependencies() ([]Version, error) {
+func (version *Version) GetDependencies() ([]Version, error) {
 	dependencyVersions := []Version{}
 
-	for _, dependency := range v.Dependencies {
-		if dependency.VersionId != "" {
-			specificVersion, specificVersionErr := GetSpecificVersion(dependency.VersionId)
-
-			if specificVersionErr != nil {
-				return dependencyVersions, specificVersionErr
+	for _, dependency := range version.Dependencies {
+		if dependency.VersionID != "" {
+			specificVersion, err := GetSpecificVersion(dependency.VersionID)
+			if err != nil {
+				return dependencyVersions, errors.Wrap(err, "failed to get specific version")
 			}
-
 			dependencyVersions = append(dependencyVersions, specificVersion)
 		}
 	}
 
-	v.Dependencies = nil
+	version.Dependencies = nil
 	return dependencyVersions, nil
 }
 
-func (v *Version) GetPrimaryFile() *File {
-	if len(v.Files) == 1 {
-		return &v.Files[0]
+func (version *Version) GetPrimaryFile() *File {
+	if len(version.Files) == 1 {
+		return &version.Files[0]
 	}
 
 	primaryIndex := 0
 
-	for i, f := range v.Files {
-		if f.Primary {
+	for i, file := range version.Files {
+		if file.Primary {
 			primaryIndex = i
 			break
 		}
 	}
 
-	return &v.Files[primaryIndex]
+	return &version.Files[primaryIndex]
 }
 
-func (f *File) Download() (io.ReadCloser, error) {
-	resp, getErr := http.Get(f.Url)
+func (file *File) Download() (io.ReadCloser, error) {
+	client := &http.Client{
+		Timeout: 10 * time.Second,
+	}
 
-	if getErr != nil {
-		return nil, getErr
+	resp, err := client.Get(file.URL)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to download file")
 	}
 
 	return resp.Body, nil
 }
 
-func (v *Version) SetProjectSlug() error {
-	project, projectErr := GetProject(v.ProjectId)
-
-	if projectErr != nil {
-		return projectErr
+func (version *Version) SetProjectSlug() error {
+	project, err := GetProject(version.ProjectID)
+	if err != nil {
+		return errors.Wrap(err, "failed to get project")
 	}
 
-	v.Slug = project.Slug
+	version.Slug = project.Slug
 	return nil
 }

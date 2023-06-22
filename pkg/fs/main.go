@@ -4,81 +4,67 @@ import (
 	"crypto/sha1"
 	"encoding/hex"
 	"errors"
-	"git.sr.ht/~ansipunk/weaver/pkg/utils"
-	"github.com/schollz/progressbar/v3"
 	"io"
 	"os"
+	"path/filepath"
 	"strings"
+
+	"github.com/schollz/progressbar/v3"
 )
 
 func isDir(path string) (bool, error) {
-	file, openErr := os.Open(path)
-
-	if openErr != nil {
-		return false, openErr
+	fileStat, err := os.Stat(path)
+	if err != nil {
+		return false, err
 	}
-
-	defer file.Close()
-	fileStat, statErr := file.Stat()
-
-	if statErr != nil {
-		return false, statErr
-	}
-
 	return fileStat.IsDir(), nil
 }
 
 func getFileHash(filePath string) (string, error) {
 	file, err := os.Open(filePath)
-
 	if err != nil {
 		return "", err
 	}
-
 	defer file.Close()
-	hash := sha1.New()
 
+	hash := sha1.New()
 	if _, err := io.Copy(hash, file); err != nil {
 		return "", err
 	}
 
-	return hex.EncodeToString(hash.Sum(nil)[:20]), nil
+	return hex.EncodeToString(hash.Sum(nil)), nil
 }
 
 func EnsureDir(path string) error {
-	pathIsDir, isDirErr := isDir(path)
-
-	if isDirErr == nil && !pathIsDir {
-		return errors.New(path + ": is not a directory")
-	}
-
-	if isDirErr != nil {
-		mkdirErr := os.Mkdir(path, 0755)
-
-		if mkdirErr != nil {
-			return mkdirErr
+	pathIsDir, err := isDir(path)
+	if err != nil {
+		if os.IsNotExist(err) {
+			if err := os.MkdirAll(path, 0755); err != nil {
+				return err
+			}
+		} else {
+			return err
 		}
+	} else if !pathIsDir {
+		return errors.New(path + ": is not a directory")
 	}
 
 	return nil
 }
 
-func fileExists(path string) error {
-	_, isDirErr := isDir(path)
-	return isDirErr
+func fileExists(path string) bool {
+	_, err := os.Stat(path)
+	return err == nil
 }
 
 func ShouldDownload(path string, hash string) (bool, error) {
-	fileExistsErr := fileExists(path)
-
-	if fileExistsErr != nil {
+	if !fileExists(path) {
 		return true, nil
 	}
 
-	fileHash, getFileHashError := getFileHash(path)
-
-	if getFileHashError != nil {
-		return false, getFileHashError
+	fileHash, err := getFileHash(path)
+	if err != nil {
+		return false, err
 	}
 
 	return hash != fileHash, nil
@@ -86,52 +72,54 @@ func ShouldDownload(path string, hash string) (bool, error) {
 
 func DeleteFile(path string) error {
 	err := os.Remove(path)
-
-	if err != nil && strings.Contains(err.Error(), "no such file or directory") {
-		return nil
+	if err != nil && !os.IsNotExist(err) {
+		return err
 	}
-
-	return err
+	return nil
 }
 
 func SaveFile(contents io.ReadCloser, path string, progressBar *progressbar.ProgressBar) error {
 	defer contents.Close()
 
-	file, createErr := os.Create(path)
-
-	if createErr != nil {
-		return createErr
+	file, err := os.Create(path)
+	if err != nil {
+		return err
 	}
-
 	defer file.Close()
 
-	if progressBar == nil {
-		_, err := io.Copy(file, contents)
-		return err
-	} else {
-		_, err := io.Copy(io.MultiWriter(file, progressBar), contents)
-		return err
+	var writer io.Writer = file
+	if progressBar != nil {
+		writer = io.MultiWriter(file, progressBar)
 	}
+
+	_, err = io.Copy(writer, contents)
+	return err
 }
 
 func RemoveOldFiles(requiredFiles []string, directory string) error {
-	dirEntries, readDirErr := os.ReadDir(directory)
-
-	if readDirErr != nil {
-		return readDirErr
+	dirEntries, err := os.ReadDir(directory)
+	if err != nil {
+		return err
 	}
 
 	for _, dirEntry := range dirEntries {
-		if dirEntry.IsDir() ||
-			utils.Contains(&requiredFiles, dirEntry.Name()) ||
-			!strings.HasSuffix(dirEntry.Name(), ".jar") {
+		if dirEntry.IsDir() || !strings.HasSuffix(dirEntry.Name(), ".jar") || contains(requiredFiles, dirEntry.Name()) {
 			continue
 		}
 
-		if deleteErr := DeleteFile(directory + dirEntry.Name()); deleteErr != nil {
-			return deleteErr
+		if err := DeleteFile(filepath.Join(directory, dirEntry.Name())); err != nil {
+			return err
 		}
 	}
 
 	return nil
+}
+
+func contains(strings []string, s string) bool {
+	for _, str := range strings {
+		if str == s {
+			return true
+		}
+	}
+	return false
 }

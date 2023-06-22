@@ -2,71 +2,67 @@ package main
 
 import (
 	"fmt"
+
+	"github.com/schollz/progressbar/v3"
+	"github.com/urfave/cli/v2"
+
 	"git.sr.ht/~ansipunk/weaver/pkg/cfg"
 	"git.sr.ht/~ansipunk/weaver/pkg/fs"
 	"git.sr.ht/~ansipunk/weaver/pkg/modrinth"
-	"github.com/schollz/progressbar/v3"
-	"github.com/urfave/cli/v2"
 )
 
 func Install(cCtx *cli.Context) error {
-	config, configErr := cfg.ReadConfig("weaver.toml")
-
-	if configErr != nil {
-		return configErr
+	// Read configuration
+	config, err := cfg.ReadConfig("weaver.toml")
+	if err != nil {
+		return fmt.Errorf("failed to read configuration: %w", err)
 	}
 
-	if ensureDirErr := fs.EnsureDir(modDirectory); ensureDirErr != nil {
-		return ensureDirErr
+	// Ensure mod directory exists
+	if err := fs.EnsureDir(modDirectory); err != nil {
+		return fmt.Errorf("failed to ensure mod directory exists: %w", err)
 	}
 
-	versionsToDownload, verErr := modrinth.GetAllVersionsToDownload(&config.Mods, &config.Loader, &config.GameVersion)
-	versionSlugs := []string{}
-
-	for _, version := range versionsToDownload {
-		versionSlugs = append(versionSlugs, version.Slug)
+	// Get versions to download
+	versionsToDownload, err := modrinth.GetAllVersionsToDownload(&config.Mods, &config.Loader, &config.GameVersion)
+	if err != nil {
+		return fmt.Errorf("failed to get versions to download: %w", err)
 	}
 
-	filenames := []string{}
-
-	if verErr != nil {
-		return verErr
-	}
+	versionSlugs := make([]string, len(versionsToDownload))
+	filenames := make([]string, len(versionsToDownload))
 
 	var downloaded uint16
 	var skipped uint16
 
-	fmt.Println("Mods to install:", versionSlugs)
+	fmt.Println("Mods to install:")
 	fmt.Println("================")
 
-	for _, version := range versionsToDownload {
+	for i, version := range versionsToDownload {
 		primaryFile := version.GetPrimaryFile()
 		filename := version.Slug + ".jar"
+		versionSlugs[i] = version.Slug
+		filenames[i] = filename
 
-		shouldDownload, shouldErr := fs.ShouldDownload(
-			modDirectory+filename, primaryFile.Hashes.Sha1)
-
-		if shouldErr != nil {
-			return shouldErr
+		shouldDownload, err := fs.ShouldDownload(modDirectory+filename, primaryFile.Hashes.Sha1)
+		if err != nil {
+			return fmt.Errorf("failed to check if download is needed: %w", err)
 		}
 
 		if shouldDownload {
-			reader, readErr := primaryFile.Download()
-
-			if readErr != nil {
-				return readErr
+			reader, err := primaryFile.Download()
+			if err != nil {
+				return fmt.Errorf("failed to download file: %w", err)
 			}
-
 			defer reader.Close()
 
-			if deleteErr := fs.DeleteFile(modDirectory + filename); deleteErr != nil {
-				return deleteErr
+			if err := fs.DeleteFile(modDirectory + filename); err != nil {
+				return fmt.Errorf("failed to delete existing file: %w", err)
 			}
 
 			pb := progressbar.DefaultBytes(primaryFile.Size, version.Slug)
-
-			if saveErr := fs.SaveFile(reader, modDirectory+filename, pb); saveErr != nil {
-				return saveErr
+			if err := fs.SaveFile(reader, modDirectory+filename, pb); err != nil {
+				return fmt.Errorf("failed to save file: %w", err)
 			}
 
 			downloaded++
@@ -74,13 +70,15 @@ func Install(cCtx *cli.Context) error {
 			fmt.Println(version.Slug, "is already up to date")
 			skipped++
 		}
-
-		filenames = append(filenames, filename)
 	}
 
 	fmt.Println("================")
 	fmt.Println("Downloaded:", downloaded)
 	fmt.Println("Skipped:", skipped)
 
-	return fs.RemoveOldFiles(filenames, modDirectory)
+	if err := fs.RemoveOldFiles(filenames, modDirectory); err != nil {
+		return fmt.Errorf("failed to remove old files: %w", err)
+	}
+
+	return nil
 }
