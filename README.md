@@ -33,7 +33,7 @@ weaver
   - [x] Create `mods/` directory
   - [x] Clear mods directory
 - [ ] Command-line interface: `cmd/weaver`
-  - [ ] Threading
+  - [x] Threading
   - [ ] Logging
   - [x] Installation
 
