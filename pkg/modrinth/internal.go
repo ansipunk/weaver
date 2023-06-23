@@ -9,6 +9,7 @@ import (
 
 const baseURL = "https://api.modrinth.com/v2"
 
+// makeRequest makes an HTTP GET request to the specified URL and returns the response body.
 func makeRequest(url string) ([]byte, error) {
 	resp, err := http.Get(url)
 	if err != nil {
@@ -35,6 +36,7 @@ func makeRequest(url string) ([]byte, error) {
 	return body, nil
 }
 
+// deduplicateVersions removes duplicate versions from the provided slice.
 func deduplicateVersions(versions []Version) []Version {
 	deduplicated := []Version{}
 	modNames := make(map[string]bool)

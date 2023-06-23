@@ -35,7 +35,7 @@ weaver remove collective
   - [x] Compare file hashes
   - [x] Create `mods/` directory
   - [x] Clear mods directory
-- [x] Command-line interface: `cmd/weaver`
+- [ ] Command-line interface: `cmd/weaver`
   - [x] Threading
   - [x] Logging
   - [ ] Initialize project

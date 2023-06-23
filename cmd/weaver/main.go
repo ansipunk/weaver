@@ -10,6 +10,7 @@ import (
 const ConfigFileName = "weaver.toml"
 const ModDirectory = "mods/"
 
+// main is the entry point of the application.
 func main() {
 	app := &cli.App{
 		Name:   "weaver",

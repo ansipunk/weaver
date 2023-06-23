@@ -8,6 +8,7 @@ import (
 	"sync"
 )
 
+// GetLatestVersion retrieves the latest version of a project for the specified loader and game version.
 func GetLatestVersion(projectSlug, loader, gameVersion string) (Version, error) {
 	loaders := "[" + `"` + loader + `"` + "]"
 	gameVersions := "[" + `"` + gameVersion + `"` + "]"
@@ -47,6 +48,7 @@ func GetLatestVersion(projectSlug, loader, gameVersion string) (Version, error) 
 	return versions[0], nil
 }
 
+// GetSpecificVersion retrieves a specific version of a project.
 func GetSpecificVersion(versionId string) (Version, error) {
 	var version Version
 	requestURL := baseURL + "/version/" + url.QueryEscape(versionId)
@@ -68,6 +70,7 @@ func GetSpecificVersion(versionId string) (Version, error) {
 	return version, nil
 }
 
+// GetAllVersionsToDownload retrieves all versions to download for the given mod names, loader, and game version.
 func GetAllVersionsToDownload(modNames []string, loader, gameVersion string) ([]Version, error) {
 	versionsToDownload := []Version{}
 	var wg sync.WaitGroup
@@ -132,6 +135,7 @@ func GetAllVersionsToDownload(modNames []string, loader, gameVersion string) ([]
 	return deduplicateVersions(versionsToDownload), nil
 }
 
+// GetProject retrieves project information for the specified project ID.
 func GetProject(projectId string) (Project, error) {
 	var project Project
 	requestURL := baseURL + "/project/" + url.QueryEscape(projectId)

@@ -10,6 +10,8 @@ import (
 	"git.sr.ht/~ansipunk/weaver/pkg/modrinth"
 )
 
+// processErrors is a helper function that processes errors from the error channel.
+// If an error is received, it returns the error. Otherwise, it returns nil.
 func processErrors(errCh <-chan error) error {
 	select {
 	case err := <-errCh:
@@ -21,23 +23,27 @@ func processErrors(errCh <-chan error) error {
 	}
 }
 
+// Counter is a thread-safe counter that keeps track of a value.
 type Counter struct {
 	value int
 	mutex sync.Mutex
 }
 
+// Increment increments the counter value by 1.
 func (c *Counter) Increment() {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 	c.value++
 }
 
+// Value returns the current value of the counter.
 func (c *Counter) Value() int {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 	return c.value
 }
 
+// InstallMods installs mods based on the provided mod list, loader, and game version.
 func InstallMods(mods []string, loader string, gameVersion string) error {
 	// Ensure mod directory exists
 	if err := fs.EnsureDir(ModDirectory); err != nil {

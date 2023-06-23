@@ -8,6 +8,7 @@ import (
 	"github.com/pkg/errors"
 )
 
+// Dependency represents a dependency of a Modrinth version.
 type Dependency struct {
 	VersionID      string `json:"version_id,omitempty"`
 	ProjectID      string `json:"project_id,omitempty"`
@@ -15,11 +16,13 @@ type Dependency struct {
 	DependencyType string `json:"dependency_type,omitempty"`
 }
 
+// Hashes represents hash values of a file.
 type Hashes struct {
 	Sha512 string `json:"sha512,omitempty"`
 	Sha1   string `json:"sha1,omitempty"`
 }
 
+// File represents a file associated with a Modrinth version.
 type File struct {
 	Hashes   Hashes `json:"hashes,omitempty"`
 	URL      string `json:"url,omitempty"`
@@ -29,6 +32,7 @@ type File struct {
 	FileType string `json:"file_type,omitempty"`
 }
 
+// Version represents a Modrinth version.
 type Version struct {
 	Name            string       `json:"name,omitempty"`
 	VersionNumber   string       `json:"version_number,omitempty"`
@@ -49,18 +53,21 @@ type Version struct {
 	Slug            string       `json:",omitempty"`
 }
 
+// DonationURL represents a donation URL for a Modrinth project.
 type DonationURL struct {
 	ID       string `json:"id,omitempty"`
 	Platform string `json:"platform,omitempty"`
 	URL      string `json:"url,omitempty"`
 }
 
+// License represents the license information for a Modrinth project.
 type License struct {
 	ID   string `json:"id,omitempty"`
 	Name string `json:"name,omitempty"`
 	URL  string `json:"url,omitempty"`
 }
 
+// GalleryImage represents an image in the gallery of a Modrinth project.
 type GalleryImage struct {
 	URL      string `json:"url,omitempty"`
 	Featured bool   `json:"featured,omitempty"`
@@ -70,6 +77,7 @@ type GalleryImage struct {
 	Ordering int    `json:"ordering,omitempty"`
 }
 
+// Project represents a Modrinth project.
 type Project struct {
 	Slug                 string         `json:"slug,omitempty"`
 	Title                string         `json:"title,omitempty"`
@@ -104,6 +112,7 @@ type Project struct {
 	Gallery              []GalleryImage `json:"gallery,omitempty"`
 }
 
+// GetDependencies retrieves the dependencies of a Modrinth version.
 func (version *Version) GetDependencies() ([]Version, error) {
 	dependencyVersions := []Version{}
 
@@ -121,6 +130,7 @@ func (version *Version) GetDependencies() ([]Version, error) {
 	return dependencyVersions, nil
 }
 
+// GetPrimaryFile returns the primary file associated with a Modrinth version.
 func (version *Version) GetPrimaryFile() *File {
 	if len(version.Files) == 1 {
 		return &version.Files[0]
@@ -138,6 +148,7 @@ func (version *Version) GetPrimaryFile() *File {
 	return &version.Files[primaryIndex]
 }
 
+// Download downloads the file associated with a Modrinth version.
 func (file *File) Download() (io.ReadCloser, error) {
 	client := &http.Client{
 		Timeout: 10 * time.Second,
@@ -151,6 +162,7 @@ func (file *File) Download() (io.ReadCloser, error) {
 	return resp.Body, nil
 }
 
+// SetProjectSlug sets the project slug for a Modrinth version.
 func (version *Version) SetProjectSlug() error {
 	project, err := GetProject(version.ProjectID)
 	if err != nil {

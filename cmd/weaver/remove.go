@@ -8,6 +8,7 @@ import (
 	"git.sr.ht/~ansipunk/weaver/pkg/cfg"
 )
 
+// contains checks if a given string is present in a string slice.
 func contains(arr []string, target string) bool {
 	for _, item := range arr {
 		if item == target {
@@ -17,6 +18,7 @@ func contains(arr []string, target string) bool {
 	return false
 }
 
+// Remove is a CLI command that removes specified mods from the configuration.
 func Remove(cCtx *cli.Context) error {
 	// Read configuration
 	modsToRemove := cCtx.Args().Slice()
@@ -26,6 +28,7 @@ func Remove(cCtx *cli.Context) error {
 		return nil
 	}
 
+	// Read the configuration file
 	config, readErr := cfg.ReadConfig(ConfigFileName)
 	if readErr != nil {
 		return fmt.Errorf("Failed to read configuration: %w", readErr)
@@ -47,6 +50,8 @@ func Remove(cCtx *cli.Context) error {
 	}
 
 	config.Mods = reducedMods
+
+	// Write the updated configuration file
 	writeErr := config.Write(ConfigFileName)
 	if writeErr != nil {
 		return fmt.Errorf("Failed to write to configuration: %w", writeErr)

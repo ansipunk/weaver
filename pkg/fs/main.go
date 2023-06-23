@@ -12,6 +12,7 @@ import (
 	"github.com/schollz/progressbar/v3"
 )
 
+// isDir checks if the given path is a directory.
 func isDir(path string) (bool, error) {
 	fileStat, err := os.Stat(path)
 	if err != nil {
@@ -20,6 +21,7 @@ func isDir(path string) (bool, error) {
 	return fileStat.IsDir(), nil
 }
 
+// getFileHash calculates the SHA1 hash of a file.
 func getFileHash(filePath string) (string, error) {
 	file, err := os.Open(filePath)
 	if err != nil {
@@ -35,6 +37,8 @@ func getFileHash(filePath string) (string, error) {
 	return hex.EncodeToString(hash.Sum(nil)), nil
 }
 
+// EnsureDir ensures that the directory at the specified path exists.
+// If the directory doesn't exist, it creates it with the default permissions.
 func EnsureDir(path string) error {
 	pathIsDir, err := isDir(path)
 	if err != nil {
@@ -52,11 +56,14 @@ func EnsureDir(path string) error {
 	return nil
 }
 
+// fileExists checks if the file exists at the specified path.
 func fileExists(path string) bool {
 	_, err := os.Stat(path)
 	return err == nil
 }
 
+// ShouldDownload checks if the file at the specified path should be downloaded based on its hash.
+// It compares the hash of the existing file (if it exists) with the provided hash.
 func ShouldDownload(path string, hash string) (bool, error) {
 	if !fileExists(path) {
 		return true, nil
@@ -70,6 +77,7 @@ func ShouldDownload(path string, hash string) (bool, error) {
 	return hash != fileHash, nil
 }
 
+// DeleteFile deletes the file at the specified path.
 func DeleteFile(path string) error {
 	err := os.Remove(path)
 	if err != nil && !os.IsNotExist(err) {
@@ -78,6 +86,8 @@ func DeleteFile(path string) error {
 	return nil
 }
 
+// SaveFile saves the contents from the provided io.ReadCloser to the specified file path.
+// If a progressBar is provided, it writes the contents with progress tracking.
 func SaveFile(contents io.ReadCloser, path string, progressBar *progressbar.ProgressBar) error {
 	defer contents.Close()
 
@@ -96,6 +106,7 @@ func SaveFile(contents io.ReadCloser, path string, progressBar *progressbar.Prog
 	return err
 }
 
+// convertToMap converts a string slice to a map with string keys and boolean values.
 func convertToMap(strings []string) map[string]bool {
 	result := make(map[string]bool, len(strings))
 	for _, str := range strings {
@@ -104,6 +115,7 @@ func convertToMap(strings []string) map[string]bool {
 	return result
 }
 
+// RemoveOldFiles removes old files in the directory that are not in the list of required files.
 func RemoveOldFiles(requiredFiles []string, directory string) error {
 	dirEntries, err := os.ReadDir(directory)
 	if err != nil {
