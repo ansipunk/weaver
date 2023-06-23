@@ -12,6 +12,11 @@ type Config struct {
 	Mods        []string `toml:"mods"`
 }
 
+func (c *Config) Dump(file *os.File) error {
+	encoder := toml.NewEncoder(file)
+	return encoder.Encode(c)
+}
+
 func ParseConfig(config []byte) (Config, error) {
 	var result Config
 	if _, err := toml.Decode(string(config), &result); err != nil {
