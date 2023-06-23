@@ -28,6 +28,12 @@ func main() {
 				Usage:   "Add a mod to the list",
 				Action:  Add,
 			},
+			{
+				Name:    "remove",
+				Aliases: []string{"r"},
+				Usage:   "Remove a mod from the list",
+				Action:  Remove,
+			},
 		},
 	}
 
