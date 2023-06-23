@@ -21,9 +21,6 @@ weaver remove collective
     - [x] Basic list
     - [ ] Version constraints
     - [x] Dependencies
-- [x] Modrinth API: `pkg/modrinth`
-  - [x] Get latest version
-  - [x] Get specific version
 - [ ] Fabric API: `pkg/fabric`
   - [ ] Get latest core
   - [ ] Get specific core
@@ -31,14 +28,20 @@ weaver remove collective
   - [ ] Installed packages
   - [ ] Package hashes
   - [ ] `weaver.toml` hash
+- [x] Modrinth API: `pkg/modrinth`
+  - [x] Get latest version
+  - [x] Get specific version
 - [x] FS: `pkg/fs`
   - [x] Compare file hashes
   - [x] Create `mods/` directory
   - [x] Clear mods directory
-- [ ] Command-line interface: `cmd/weaver`
+- [x] Command-line interface: `cmd/weaver`
   - [x] Threading
-  - [ ] Logging
-  - [x] Installation
+  - [x] Logging
+  - [ ] Initialize project
+  - [x] Install mods
+  - [x] Add mods
+  - [x] Remove mods
 
 ## File example
 
