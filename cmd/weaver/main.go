@@ -7,12 +7,14 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
-const modDirectory = "mods/"
+const ConfigFileName = "weaver.toml"
+const ModDirectory = "mods/"
 
 func main() {
 	app := &cli.App{
-		Name:  "weaver",
-		Usage: "Minecraft Fabric server manager",
+		Name:   "weaver",
+		Usage:  "Minecraft Fabric server manager",
+		Action: Install,
 		Commands: []*cli.Command{
 			{
 				Name:    "install",

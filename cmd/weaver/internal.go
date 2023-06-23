@@ -40,7 +40,7 @@ func (c *Counter) Value() int {
 
 func InstallMods(mods []string, loader string, gameVersion string) error {
 	// Ensure mod directory exists
-	if err := fs.EnsureDir(modDirectory); err != nil {
+	if err := fs.EnsureDir(ModDirectory); err != nil {
 		return fmt.Errorf("Failed to ensure mod directory exists: %w", err)
 	}
 
@@ -60,9 +60,13 @@ func InstallMods(mods []string, loader string, gameVersion string) error {
 	var (
 		downloadedCounter Counter
 		skippedCounter    Counter
-		wg                sync.WaitGroup     // WaitGroup for synchronization
-		errCh             = make(chan error) // Channel to receive errors from goroutines
 	)
+
+	errCh := make(chan error) // Channel to receive errors from goroutines
+
+	defer close(errCh) // Close the error channel when InstallMods returns
+
+	var wg sync.WaitGroup // WaitGroup for synchronization
 
 	fmt.Println("Mods to install:")
 	fmt.Println("================")
@@ -73,7 +77,7 @@ func InstallMods(mods []string, loader string, gameVersion string) error {
 		versionSlugs[i] = version.Slug
 		filenames[i] = filename
 
-		shouldDownload, err := fs.ShouldDownload(modDirectory+filename, primaryFile.Hashes.Sha1)
+		shouldDownload, err := fs.ShouldDownload(ModDirectory+filename, primaryFile.Hashes.Sha1)
 		if err != nil {
 			return fmt.Errorf("Failed to check if download is needed: %w", err)
 		}
@@ -91,13 +95,13 @@ func InstallMods(mods []string, loader string, gameVersion string) error {
 				}
 				defer reader.Close()
 
-				if err := fs.DeleteFile(modDirectory + filename); err != nil {
+				if err := fs.DeleteFile(ModDirectory + filename); err != nil {
 					errCh <- fmt.Errorf("Failed to delete existing file for version %s: %v", version.Slug, err)
 					return
 				}
 
 				pb := progressbar.DefaultBytes(primaryFile.Size, version.Slug)
-				if err := fs.SaveFile(reader, modDirectory+filename, pb); err != nil {
+				if err := fs.SaveFile(reader, ModDirectory+filename, pb); err != nil {
 					errCh <- fmt.Errorf("Failed to save file for version %s: %v", version.Slug, err)
 					return
 				}
@@ -111,17 +115,17 @@ func InstallMods(mods []string, loader string, gameVersion string) error {
 	}
 
 	wg.Wait() // Wait for all goroutines to finish
+
 	if err := processErrors(errCh); err != nil {
 		// Handle the returned error
 		return err
 	}
-	close(errCh) // Close the error channel
 
 	fmt.Println("================")
 	fmt.Println("Downloaded:", downloadedCounter.Value())
 	fmt.Println("Skipped:", skippedCounter.Value())
 
-	if err := fs.RemoveOldFiles(filenames, modDirectory); err != nil {
+	if err := fs.RemoveOldFiles(filenames, ModDirectory); err != nil {
 		return fmt.Errorf("Failed to remove old files: %w", err)
 	}
 

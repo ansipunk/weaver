@@ -12,7 +12,11 @@ func Add(cCtx *cli.Context) error {
 	// Read configuration
 	mods := cCtx.Args().Slice()
 
-	config, readErr := cfg.ReadConfig("weaver.toml")
+	if len(mods) == 0 {
+		fmt.Println("No mods to add or install.")
+	}
+
+	config, readErr := cfg.ReadConfig(ConfigFileName)
 	if readErr != nil {
 		return fmt.Errorf("Failed to read configuration: %w", readErr)
 	}
@@ -23,5 +27,11 @@ func Add(cCtx *cli.Context) error {
 	}
 
 	config.Mods = append(config.Mods, mods...)
-	return config.Write("weaver.toml")
+
+	writeErr := config.Write(ConfigFileName)
+	if writeErr != nil {
+		return fmt.Errorf("Failed to write to configuration: %w", writeErr)
+	}
+
+	return nil
 }

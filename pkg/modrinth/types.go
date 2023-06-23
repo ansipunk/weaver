@@ -75,8 +75,8 @@ type Project struct {
 	Title                string         `json:"title,omitempty"`
 	Description          string         `json:"description,omitempty"`
 	Categories           []string       `json:"categories,omitempty"`
-	ClientSide           bool           `json:"client_side,omitempty"`
-	ServerSide           bool           `json:"server_side,omitempty"`
+	ClientSide           string         `json:"client_side,omitempty"`
+	ServerSide           string         `json:"server_side,omitempty"`
 	Body                 string         `json:"body,omitempty"`
 	AdditionalCategories []string       `json:"additional_categories,omitempty"`
 	IssuesURL            string         `json:"issues_url,omitempty"`

@@ -1,6 +1,7 @@
 package cfg
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/BurntSushi/toml"
@@ -18,18 +19,23 @@ func (c *Config) Dump(file *os.File) error {
 }
 
 func (c *Config) Write(path string) error {
-	file, openErr := os.Create(path)
-	if openErr != nil {
-		return openErr
+	file, err := os.Create(path)
+	if err != nil {
+		return fmt.Errorf("failed to open file %v: %w", path, err)
 	}
 	defer file.Close()
-	return c.Dump(file)
+
+	if err := c.Dump(file); err != nil {
+		return fmt.Errorf("failed to dump config to file %v: %w", path, err)
+	}
+
+	return nil
 }
 
 func ParseConfig(config []byte) (Config, error) {
 	var result Config
 	if _, err := toml.Decode(string(config), &result); err != nil {
-		return Config{}, err
+		return Config{}, fmt.Errorf("failed to parse config: %w", err)
 	}
 	return result, nil
 }
@@ -37,7 +43,7 @@ func ParseConfig(config []byte) (Config, error) {
 func ReadConfig(path string) (Config, error) {
 	content, err := os.ReadFile(path)
 	if err != nil {
-		return Config{}, err
+		return Config{}, fmt.Errorf("failed to read file %v: %w", path, err)
 	}
 	return ParseConfig(content)
 }

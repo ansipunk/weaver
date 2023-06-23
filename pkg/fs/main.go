@@ -96,14 +96,24 @@ func SaveFile(contents io.ReadCloser, path string, progressBar *progressbar.Prog
 	return err
 }
 
+func convertToMap(strings []string) map[string]bool {
+	result := make(map[string]bool, len(strings))
+	for _, str := range strings {
+		result[str] = true
+	}
+	return result
+}
+
 func RemoveOldFiles(requiredFiles []string, directory string) error {
 	dirEntries, err := os.ReadDir(directory)
 	if err != nil {
 		return err
 	}
 
+	requiredFilesMap := convertToMap(requiredFiles)
+
 	for _, dirEntry := range dirEntries {
-		if dirEntry.IsDir() || !strings.HasSuffix(dirEntry.Name(), ".jar") || contains(requiredFiles, dirEntry.Name()) {
+		if dirEntry.IsDir() || !strings.HasSuffix(dirEntry.Name(), ".jar") || requiredFilesMap[dirEntry.Name()] {
 			continue
 		}
 
@@ -113,13 +123,4 @@ func RemoveOldFiles(requiredFiles []string, directory string) error {
 	}
 
 	return nil
-}
-
-func contains(strings []string, s string) bool {
-	for _, str := range strings {
-		if str == s {
-			return true
-		}
-	}
-	return false
 }

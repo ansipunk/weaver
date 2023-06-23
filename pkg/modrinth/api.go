@@ -71,6 +71,8 @@ func GetSpecificVersion(versionId string) (Version, error) {
 func GetAllVersionsToDownload(modNames []string, loader, gameVersion string) ([]Version, error) {
 	versionsToDownload := []Version{}
 	var wg sync.WaitGroup
+	var firstError error
+	errorMutex := sync.Mutex{}
 
 	modLock := sync.Mutex{}
 	dependencyLock := sync.Mutex{}
@@ -81,7 +83,11 @@ func GetAllVersionsToDownload(modNames []string, loader, gameVersion string) ([]
 			defer wg.Done()
 			version, err := GetLatestVersion(modName, loader, gameVersion)
 			if err != nil {
-				fmt.Printf("Failed to get latest version for mod '%s': %v\n", modName, err)
+				errorMutex.Lock()
+				if firstError == nil {
+					firstError = fmt.Errorf("failed to get latest version for mod '%s': %v", modName, err)
+				}
+				errorMutex.Unlock()
 				return
 			}
 
@@ -93,13 +99,21 @@ func GetAllVersionsToDownload(modNames []string, loader, gameVersion string) ([]
 
 	wg.Wait()
 
+	if firstError != nil {
+		return nil, firstError
+	}
+
 	for _, version := range versionsToDownload {
 		wg.Add(1)
 		go func(version Version) {
 			defer wg.Done()
 			dependencies, err := version.GetDependencies()
 			if err != nil {
-				fmt.Printf("Failed to get dependencies for version '%s': %v\n", version.Slug, err)
+				errorMutex.Lock()
+				if firstError == nil {
+					firstError = fmt.Errorf("failed to get dependencies for version '%s': %v", version.Slug, err)
+				}
+				errorMutex.Unlock()
 				return
 			}
 
@@ -110,6 +124,10 @@ func GetAllVersionsToDownload(modNames []string, loader, gameVersion string) ([]
 	}
 
 	wg.Wait()
+
+	if firstError != nil {
+		return nil, firstError
+	}
 
 	return deduplicateVersions(versionsToDownload), nil
 }
