@@ -6,7 +6,10 @@ A Minecraft server manager.
 
 ```sh
 go install 'git.sr.ht/~ansipunk/weaver/cmd/weaver'
-weaver
+
+weaver add starlight collective
+weaver install
+weaver remove collective
 ```
 
 ## Roadmap
