@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"os"
 
 	"github.com/urfave/cli/v2"
 
@@ -15,19 +14,14 @@ func Add(cCtx *cli.Context) error {
 
 	config, readErr := cfg.ReadConfig("weaver.toml")
 	if readErr != nil {
-		return fmt.Errorf("failed to read configuration: %w", readErr)
+		return fmt.Errorf("Failed to read configuration: %w", readErr)
 	}
+
+	installErr := InstallMods(mods, config.Loader, config.GameVersion)
+	if installErr != nil {
+		return fmt.Errorf("Failed to install new mods: %w", installErr)
+	}
+
 	config.Mods = append(config.Mods, mods...)
-
-	file, openErr := os.Create("weaver.toml")
-	if openErr != nil {
-		return fmt.Errorf("failed to open configuration: %w", openErr)
-	}
-	defer file.Close()
-
-	if writeErr := config.Dump(file); writeErr != nil {
-		return fmt.Errorf("failed to write configuration: %w", openErr)
-	}
-
-	return nil
+	return config.Write("weaver.toml")
 }

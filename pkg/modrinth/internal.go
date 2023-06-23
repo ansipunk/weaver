@@ -1,6 +1,8 @@
 package modrinth
 
 import (
+	"errors"
+	"fmt"
 	"io"
 	"net/http"
 )
@@ -13,6 +15,17 @@ func makeRequest(url string) ([]byte, error) {
 		return nil, err
 	}
 	defer resp.Body.Close()
+
+	statusCode := resp.StatusCode
+	if statusCode != 200 {
+		if statusCode == 404 {
+			return nil, errors.New("Mod or version was not found")
+		} else if statusCode == 500 {
+			return nil, errors.New("Modrinth server error")
+		} else {
+			return nil, errors.New("Request failed with status " + fmt.Sprint(statusCode))
+		}
+	}
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {

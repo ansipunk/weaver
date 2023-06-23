@@ -68,18 +68,18 @@ func GetSpecificVersion(versionId string) (Version, error) {
 	return version, nil
 }
 
-func GetAllVersionsToDownload(modNames *[]string, loader, gameVersion *string) ([]Version, error) {
+func GetAllVersionsToDownload(modNames []string, loader, gameVersion string) ([]Version, error) {
 	versionsToDownload := []Version{}
 	var wg sync.WaitGroup
 
 	modLock := sync.Mutex{}
 	dependencyLock := sync.Mutex{}
 
-	for _, modName := range *modNames {
+	for _, modName := range modNames {
 		wg.Add(1)
 		go func(modName string) {
 			defer wg.Done()
-			version, err := GetLatestVersion(modName, *loader, *gameVersion)
+			version, err := GetLatestVersion(modName, loader, gameVersion)
 			if err != nil {
 				fmt.Printf("Failed to get latest version for mod '%s': %v\n", modName, err)
 				return

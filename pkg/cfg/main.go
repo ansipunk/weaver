@@ -17,6 +17,15 @@ func (c *Config) Dump(file *os.File) error {
 	return encoder.Encode(c)
 }
 
+func (c *Config) Write(path string) error {
+	file, openErr := os.Create(path)
+	if openErr != nil {
+		return openErr
+	}
+	defer file.Close()
+	return c.Dump(file)
+}
+
 func ParseConfig(config []byte) (Config, error) {
 	var result Config
 	if _, err := toml.Decode(string(config), &result); err != nil {
