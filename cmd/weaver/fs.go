@@ -1,4 +1,4 @@
-package fs
+package main
 
 import (
 	"crypto/sha1"

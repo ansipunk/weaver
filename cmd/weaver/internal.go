@@ -6,8 +6,8 @@ import (
 
 	"github.com/schollz/progressbar/v3"
 
-	"git.sr.ht/~ansipunk/weaver/pkg/fs"
 	"git.sr.ht/~ansipunk/weaver/pkg/modrinth"
+	"git.sr.ht/~ansipunk/weaver/pkg/types"
 )
 
 // processErrors is a helper function that processes errors from the error channel.
@@ -46,8 +46,8 @@ func (c *Counter) Value() int {
 // InstallMods installs mods based on the provided mod list, loader, and game version.
 func InstallMods(mods []string, loader string, gameVersion string) error {
 	// Ensure mod directory exists
-	if err := fs.EnsureDir(ModDirectory); err != nil {
-		return fmt.Errorf("Failed to ensure mod directory exists: %w", err)
+	if err := EnsureDir(ModDirectory); err != nil {
+		return err
 	}
 
 	// Get versions to download
@@ -78,12 +78,12 @@ func InstallMods(mods []string, loader string, gameVersion string) error {
 	fmt.Println("================")
 
 	for i, version := range versionsToDownload {
-		primaryFile := version.GetPrimaryFile()
+		primaryFile := modrinth.GetVersionPrimaryFile(&version)
 		filename := version.Slug + ".jar"
 		versionSlugs[i] = version.Slug
 		filenames[i] = filename
 
-		shouldDownload, err := fs.ShouldDownload(ModDirectory+filename, primaryFile.Hashes.Sha1)
+		shouldDownload, err := ShouldDownload(ModDirectory+filename, primaryFile.Hashes.Sha1)
 		if err != nil {
 			return fmt.Errorf("Failed to check if download is needed: %w", err)
 		}
@@ -91,23 +91,23 @@ func InstallMods(mods []string, loader string, gameVersion string) error {
 		if shouldDownload {
 			wg.Add(1) // Increment WaitGroup counter for each goroutine
 
-			go func(version modrinth.Version, filename string) {
+			go func(version types.Version, filename string) {
 				defer wg.Done() // Signal the WaitGroup that the goroutine is done
 
-				reader, err := primaryFile.Download()
+				reader, err := modrinth.DownloadFile(primaryFile)
 				if err != nil {
 					errCh <- fmt.Errorf("Failed to download file for version %s: %v", version.Slug, err)
 					return
 				}
 				defer reader.Close()
 
-				if err := fs.DeleteFile(ModDirectory + filename); err != nil {
+				if err := DeleteFile(ModDirectory + filename); err != nil {
 					errCh <- fmt.Errorf("Failed to delete existing file for version %s: %v", version.Slug, err)
 					return
 				}
 
 				pb := progressbar.DefaultBytes(primaryFile.Size, version.Slug)
-				if err := fs.SaveFile(reader, ModDirectory+filename, pb); err != nil {
+				if err := SaveFile(reader, ModDirectory+filename, pb); err != nil {
 					errCh <- fmt.Errorf("Failed to save file for version %s: %v", version.Slug, err)
 					return
 				}
@@ -131,7 +131,7 @@ func InstallMods(mods []string, loader string, gameVersion string) error {
 	fmt.Println("Downloaded:", downloadedCounter.Value())
 	fmt.Println("Skipped:", skippedCounter.Value())
 
-	if err := fs.RemoveOldFiles(filenames, ModDirectory); err != nil {
+	if err := RemoveOldFiles(filenames, ModDirectory); err != nil {
 		return fmt.Errorf("Failed to remove old files: %w", err)
 	}
 

@@ -1,11 +1,7 @@
-package modrinth
+package types
 
 import (
-	"io"
-	"net/http"
 	"time"
-
-	"github.com/pkg/errors"
 )
 
 // Dependency represents a dependency of a Modrinth version.
@@ -110,65 +106,4 @@ type Project struct {
 	GameVersions         []string       `json:"game_versions,omitempty"`
 	Loaders              []string       `json:"loaders,omitempty"`
 	Gallery              []GalleryImage `json:"gallery,omitempty"`
-}
-
-// GetDependencies retrieves the dependencies of a Modrinth version.
-func (version *Version) GetDependencies() ([]Version, error) {
-	dependencyVersions := []Version{}
-
-	for _, dependency := range version.Dependencies {
-		if dependency.VersionID != "" {
-			specificVersion, err := GetSpecificVersion(dependency.VersionID)
-			if err != nil {
-				return dependencyVersions, errors.Wrap(err, "failed to get specific version")
-			}
-			dependencyVersions = append(dependencyVersions, specificVersion)
-		}
-	}
-
-	version.Dependencies = nil
-	return dependencyVersions, nil
-}
-
-// GetPrimaryFile returns the primary file associated with a Modrinth version.
-func (version *Version) GetPrimaryFile() *File {
-	if len(version.Files) == 1 {
-		return &version.Files[0]
-	}
-
-	primaryIndex := 0
-
-	for i, file := range version.Files {
-		if file.Primary {
-			primaryIndex = i
-			break
-		}
-	}
-
-	return &version.Files[primaryIndex]
-}
-
-// Download downloads the file associated with a Modrinth version.
-func (file *File) Download() (io.ReadCloser, error) {
-	client := &http.Client{
-		Timeout: 10 * time.Second,
-	}
-
-	resp, err := client.Get(file.URL)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to download file")
-	}
-
-	return resp.Body, nil
-}
-
-// SetProjectSlug sets the project slug for a Modrinth version.
-func (version *Version) SetProjectSlug() error {
-	project, err := GetProject(version.ProjectID)
-	if err != nil {
-		return errors.Wrap(err, "failed to get project")
-	}
-
-	version.Slug = project.Slug
-	return nil
 }

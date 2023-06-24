@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+
+	"git.sr.ht/~ansipunk/weaver/pkg/types"
 )
 
 const baseURL = "https://api.modrinth.com/v2"
@@ -37,8 +39,8 @@ func makeRequest(url string) ([]byte, error) {
 }
 
 // deduplicateVersions removes duplicate versions from the provided slice.
-func deduplicateVersions(versions []Version) []Version {
-	deduplicated := []Version{}
+func deduplicateVersions(versions []types.Version) []types.Version {
+	deduplicated := []types.Version{}
 	modNames := make(map[string]bool)
 
 	for _, version := range versions {
