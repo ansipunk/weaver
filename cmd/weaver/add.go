@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/urfave/cli/v2"
@@ -14,7 +15,7 @@ func Add(cCtx *cli.Context) error {
 	mods := cCtx.Args().Slice()
 
 	if len(mods) == 0 {
-		fmt.Println("No mods to add or install.")
+		return errors.New("No mods to add or install.")
 	}
 
 	// Read the configuration file
